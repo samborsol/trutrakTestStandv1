@@ -4,13 +4,6 @@ LIST P=16F1826
 
 __CONFIG _CONFIG1,(_FOSC_INTOSC & _WDTE_OFF & _PWRTE_OFF &_MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_ON & _CLKOUTEN_OFF & _IESO_OFF & _FCMEN_OFF)
 
-CBLOCK	0X20
-	d1
-	d2
-	resulthi
-	resultlo
-ENDC
-
 ORG 0X0000
 	GOTO	START
 
@@ -52,6 +45,7 @@ LOOP
 	BTFSC	PORTA,3
 	BSF 	PORTB,5	
 	GOTO	LOOP
+
 ISR
 	BANKSEL	ADRESH
 	MOVF	ADRESH,W 	;copy over voltage reading to WREG
@@ -64,5 +58,6 @@ ISR
 	BSF 	INTCON,7	;re-enable the global interrupt
 	BANKSEL	PIR1
 	BCF	PIR1,6 		;clear adc interrupt flag
-	GOTO	LOOP
+	RETFIE
+
 END
