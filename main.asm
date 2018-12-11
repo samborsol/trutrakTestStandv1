@@ -35,16 +35,16 @@ ORG 0X0010
 	MOVLW	0X10
 	MOVWF	ANSELA
 	BANKSEL	PIR1
-	BCF		PIR1,6 ;clear adc interrupt flag
+	BCF	PIR1,6 		;clear adc interrupt flag
 	BANKSEL PIE1
-	BSF		PIE1,6 ;enable adc interrupt
+	BSF	PIE1,6		;enable adc interrupt
 	MOVLW	B'11000000'
-	MOVWF	INTCON
+	MOVWF	INTCON		;enable global and peripheral interrupt
 	BANKSEL	ADCON1	
 	MOVLW	B'01110000'
-	MOVWF	ADCON1
-	MOVLW	B'00010011' 
-	MOVWF	ADCON0
+	MOVWF	ADCON1		;right justified adc reading
+	MOVLW	B'00010011'
+	MOVWF	ADCON0		;pick out the channel for ADC and turn on
 LOOP
 	BANKSEL	PORTA
 	BTFSS	PORTA,3
@@ -54,13 +54,15 @@ LOOP
 	GOTO	LOOP
 ISR
 	BANKSEL	ADRESH
-	MOVF	ADRESH,W ;copy over voltage reading to WREG
+	MOVF	ADRESH,W 	;copy over voltage reading to WREG
 	BANKSEL	PORTB
-	BTFSS	WREG,7
+	BTFSS	WREG,7		;check if greater than "6" on VRT TORQUE
 	BCF 	PORTB,3
 	BTFSC	WREG,7
 	BSF 	PORTB,3	
-	BSF		ADCON0,ADGO
-	BSF 	INTCON,7
+	BSF	ADCON0,ADGO	;start the adc again
+	BSF 	INTCON,7	;re-enable the global interrupt
+	BANKSEL	PIR1
+	BCF	PIR1,6 		;clear adc interrupt flag
 	GOTO	LOOP
 END
