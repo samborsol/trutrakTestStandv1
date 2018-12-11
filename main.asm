@@ -38,6 +38,7 @@ ORG 0X0010
 	BANKSEL	PIR1
 	BCF	PIR1,6 ;clear adc interrupt flag
 	NOP
+
 	BANKSEL PIE1
 	BSF	PIE1,6 ;enable adc interrupt
 	NOP
@@ -63,8 +64,7 @@ LOOP
 	GOTO	LOOP
 
 ISR
-	BCF	INTCON,	GIE ;Disable all interrupts
-	NOP
+
 	BANKSEL	ADRESH
 	MOVF	ADRESH,W ;copy over voltage reading to WREG
 
@@ -72,26 +72,16 @@ ISR
 	BTFSS	WREG,7
 	BCF	PORTB,3
  	NOP
+
 	BTFSC	WREG,7
 	BSF	PORTB,3	
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-
-    	BSF	INTCON,GIE ;re-enable all interrupts
 	NOP
 
 	BSF	ADCON0,ADGO
 	NOP
+
+	MOVLW	B'11000000'
+	MOVWF	INTCON
 
 	GOTO 	LOOP
 
