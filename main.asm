@@ -16,9 +16,9 @@ ORG 0X0010
 	CLRF	LATA
 	CLRF	LATB
 	BANKSEL	TRISB
-	MOVLW	0XC6
+	MOVLW	B'11000111'
 	MOVWF	TRISB
-	MOVLW	0X3F
+	MOVLW	B'00111100'
 	MOVWF	TRISA
 	MOVLW	0xF0
 	MOVWF	OSCCON
@@ -28,9 +28,9 @@ ORG 0X0010
 	MOVLW	0X10
 	MOVWF	ANSELA
 	BANKSEL	PIR1
-	BCF	PIR1,6 		;clear adc interrupt flag
+	BCF		PIR1,6 		;clear adc interrupt flag
 	BANKSEL PIE1
-	BSF	PIE1,6		;enable adc interrupt
+	BSF		PIE1,6		;enable adc interrupt
 	MOVLW	B'11000000'
 	MOVWF	INTCON		;enable global and peripheral interrupt
 	BANKSEL	ADCON1	
@@ -40,10 +40,28 @@ ORG 0X0010
 	MOVWF	ADCON0		;pick out the channel for ADC and turn on
 LOOP
 	BANKSEL	PORTA
+;PIN 2
+	BTFSS	PORTB,1
+	BCF 	PORTA,7
+	BTFSC	PORTB,1
+	BSF 	PORTA,7	
+;PIN 3
+	BTFSS	PORTB,0
+	BCF 	PORTA,0
+	BTFSC	PORTB,0
+	BSF 	PORTA,0	
+;PIN 4
+	BTFSS	PORTA,2
+	BCF 	PORTA,1
+	BTFSC	PORTA,2
+	BSF 	PORTA,1	
+;PIN 5
 	BTFSS	PORTA,3
 	BCF 	PORTB,5
 	BTFSC	PORTA,3
 	BSF 	PORTB,5	
+
+
 	GOTO	LOOP
 
 ISR
@@ -54,10 +72,10 @@ ISR
 	BCF 	PORTB,3
 	BTFSC	WREG,7
 	BSF 	PORTB,3	
-	BSF	ADCON0,ADGO	;start the adc again
+	BSF		ADCON0,ADGO	;start the adc again
 	BSF 	INTCON,7	;re-enable the global interrupt
 	BANKSEL	PIR1
-	BCF	PIR1,6 		;clear adc interrupt flag
+	BCF		PIR1,6 		;clear adc interrupt flag
 	RETFIE
 
 END
