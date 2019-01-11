@@ -45,9 +45,9 @@ ORG 0X0010
 	MOVLW	B'11001000'	; also enable interrupt on change, enable global and peripheral interrupt
 	MOVWF	INTCON		; INTCON contains the various enable and flag bits for TMR0 register overflow, interrupt-on-change and external INT pin interrupts.
 	BANKSEL	IOCBP
-	MOVLW	B'00011000'
+	MOVLW	B'00011110'
 	MOVWF	IOCBP		; IOCBP, interrupt-on-change enabled on the pin for a positive going edge. Associated status bit and interrupt flag will be set upon detecting an edge.
-	MOVLW	B'00000110'
+	MOVLW	B'00011110'
 	MOVWF	IOCBN
 	BANKSEL	ADCON1	
 	MOVLW	B'01110000'	; ADC control registers 1 and 2
@@ -59,9 +59,9 @@ LOOP
 	GOTO	LOOP		; main loop, wait here for an interrupt
 
 ISR
-;	BANKSEL ADCON0	
-;	BTFSS	ADCON0,ADGO
-;	GOTO	ADC_ISR
+	BANKSEL ADCON0	
+	BTFSS	ADCON0,ADGO
+	GOTO	ADC_ISR
 	GOTO	QUAD_ISR
 
 ADC_ISR
