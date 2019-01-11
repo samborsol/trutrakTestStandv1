@@ -45,8 +45,10 @@ ORG 0X0010
 	MOVLW	B'11001000'	; also enable interrupt on change, enable global and peripheral interrupt
 	MOVWF	INTCON		; INTCON contains the various enable and flag bits for TMR0 register overflow, interrupt-on-change and external INT pin interrupts.
 	BANKSEL	IOCBP
-	MOVLW	B'00011110'
+	MOVLW	B'00011000'
 	MOVWF	IOCBP		; IOCBP, interrupt-on-change enabled on the pin for a positive going edge. Associated status bit and interrupt flag will be set upon detecting an edge.
+	MOVLW	B'00000110'
+	MOVWF	IOCBN
 	BANKSEL	ADCON1	
 	MOVLW	B'01110000'	; ADC control registers 1 and 2
 	MOVWF	ADCON1		; right justified adc reading
@@ -57,9 +59,9 @@ LOOP
 	GOTO	LOOP		; main loop, wait here for an interrupt
 
 ISR
-	BANKSEL ADCON0	
-	BTFSS	ADCON0,ADGO
-	GOTO	ADC_ISR
+;	BANKSEL ADCON0	
+;	BTFSS	ADCON0,ADGO
+;	GOTO	ADC_ISR
 	GOTO	QUAD_ISR
 
 ADC_ISR
@@ -86,27 +88,27 @@ QUAD_ISR
 
 	BANKSEL STATE_CURR
 	MOVF	STATE_PREV,0	;check to make sure that there is a 
-	SUBWF	0X00,0
+	SUBLW	0X00
 	BTFSC	STATUS,Z
 	GOTO	SET_STATE_PREV
 
 	MOVF	STATE_CURR,0
-	SUBWF	0X06,0			;THIS IS STATE A
+	SUBLW	0X06			;THIS IS STATE A
 	BTFSC	STATUS,Z
 	GOTO	IF_STATE_AorD
 
 	MOVF	STATE_CURR,0
-	SUBWF	0X0A,0			;THIS IS STATE B
+	SUBLW	0X0A			;THIS IS STATE B
 	BTFSC	STATUS,Z
 	GOTO	IF_STATE_BorC
 
 	MOVF	STATE_CURR,0
-	SUBWF	0X14,0			;THIS IS STATE C
+	SUBLW	0X14			;THIS IS STATE C
 	BTFSC	STATUS,Z
 	GOTO	IF_STATE_BorC
 
 	MOVF	STATE_CURR,0
-	SUBWF	0X18,0			;THIS IS STATE D
+	SUBLW	0X18			;THIS IS STATE D
 	BTFSC	STATUS,Z
 	GOTO	IF_STATE_AorD
 
@@ -122,12 +124,12 @@ SET_STATE_PREV
 IF_STATE_AorD
 	BANKSEL STATE_CURR
 	MOVF 	STATE_PREV,0	;for state A or D,
- 	SUBWF 	0X0A,0			;check that previous states, B and C.
+ 	SUBLW 	0X0A			;check that previous states, B and C.
 	BTFSC	STATUS,Z
 	GOTO	DIM_LIGHT
 
 	MOVF	STATE_PREV,0	
- 	SUBWF 	0X14,0
+ 	SUBLW 	0X14
 	BTFSC	STATUS,Z
 	GOTO	DIM_LIGHT
 
@@ -136,23 +138,25 @@ IF_STATE_AorD
 IF_STATE_BorC
 	BANKSEL	STATE_CURR
 	MOVF 	STATE_PREV,0	;for state B or C,
-  	SUBWF 	0X06,0			;check that previous states, A and D.
+  	SUBLW 	0X06			;check that previous states, A and D.
 	BTFSC	STATUS,Z
 	GOTO	DIM_LIGHT
 
 	MOVF	STATE_PREV,0	
-  	SUBWF 	0X18,0
+  	SUBLW 	0X18
 	BTFSC	STATUS,Z
 	GOTO	DIM_LIGHT
 
 	GOTO 	FIRE_LIGHT
-	
+
 FIRE_LIGHT
 	BANKSEL PORTA
 	BSF		PORTA,0
 	GOTO SET_STATE_PREV
+
 DIM_LIGHT
 	BANKSEL	PORTA
 	BCF		PORTA,0
 	GOTO	SET_STATE_PREV
+
 END
