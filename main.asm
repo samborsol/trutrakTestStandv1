@@ -32,7 +32,7 @@ ORG 0X0010
 	MOVLW	0X10		; set the PORTA bit for the ADC input.
 	MOVWF	ANSELA
 
-	BANKSEL 0
+	BANKSEL STATE_CURR
 	MOVLW	b'00000000'	; set the STATE_CURR and STATE_PREV for the quadrature test, so there state going in is unambiguous.
 	MOVWF	STATE_CURR
 	MOVLW	b'00000000'
@@ -45,7 +45,7 @@ ORG 0X0010
 	MOVLW	B'11001000'	; also enable interrupt on change, enable global and peripheral interrupt
 	MOVWF	INTCON		; INTCON contains the various enable and flag bits for TMR0 register overflow, interrupt-on-change and external INT pin interrupts.
 	BANKSEL	IOCBP
-	MOVLW	B'11111111'
+	MOVLW	B'00011110'
 	MOVWF	IOCBP		; IOCBP, interrupt-on-change enabled on the pin for a positive going edge. Associated status bit and interrupt flag will be set upon detecting an edge.
 	BANKSEL	ADCON1	
 	MOVLW	B'01110000'	; ADC control registers 1 and 2
@@ -81,10 +81,10 @@ QUAD_ISR
 	MOVF	PORTB,0
 	ANDLW	B'00011110'
 	
-	BANKSEL	0
+	BANKSEL	STATE_CURR
 	MOVWF	STATE_CURR
 
-	BANKSEL 0
+	BANKSEL STATE_CURR
 	MOVF	STATE_PREV,0	;check to make sure that there is a 
 	SUBWF	0X00,0
 	BTFSC	STATUS,Z
@@ -92,35 +92,35 @@ QUAD_ISR
 
 	MOVF	STATE_CURR,0
 	SUBWF	0X06,0			;THIS IS STATE A
-	BTFSS	STATUS,Z
+	BTFSC	STATUS,Z
 	GOTO	IF_STATE_AorD
 
 	MOVF	STATE_CURR,0
 	SUBWF	0X0A,0			;THIS IS STATE B
-	BTFSS	STATUS,Z
+	BTFSC	STATUS,Z
 	GOTO	IF_STATE_BorC
 
 	MOVF	STATE_CURR,0
 	SUBWF	0X14,0			;THIS IS STATE C
-	BTFSS	STATUS,Z
+	BTFSC	STATUS,Z
 	GOTO	IF_STATE_BorC
 
 	MOVF	STATE_CURR,0
 	SUBWF	0X18,0			;THIS IS STATE D
-	BTFSS	STATUS,Z
+	BTFSC	STATUS,Z
 	GOTO	IF_STATE_AorD
 
 	;GETS THIS FAR IT MEANS FAILURE!!
 	GOTO	FIRE_LIGHT
 
 SET_STATE_PREV
-	BANKSEL 0
+	BANKSEL STATE_CURR
 	MOVF	STATE_CURR,0
 	MOVWF	STATE_PREV
 	RETFIE
 
 IF_STATE_AorD
-	BANKSEL 0
+	BANKSEL STATE_CURR
 	MOVF 	STATE_PREV,0	;for state A or D,
  	SUBWF 	0X0A,0			;check that previous states, B and C.
 	BTFSC	STATUS,Z
@@ -134,7 +134,7 @@ IF_STATE_AorD
 	GOTO	FIRE_LIGHT
 
 IF_STATE_BorC
-	BANKSEL	0
+	BANKSEL	STATE_CURR
 	MOVF 	STATE_PREV,0	;for state B or C,
   	SUBWF 	0X06,0			;check that previous states, A and D.
 	BTFSC	STATUS,Z
@@ -150,25 +150,9 @@ IF_STATE_BorC
 FIRE_LIGHT
 	BANKSEL PORTA
 	BSF		PORTA,0
-	RETFIE
+	GOTO SET_STATE_PREV
 DIM_LIGHT
 	BANKSEL	PORTA
 	BCF		PORTA,0
-	RETFIE	
+	GOTO	SET_STATE_PREV
 END
-
-
-
-;	STATE_A	RES 1
-;	STATE_B	RES 1
-;	STATE_C	RES	1
-;	STATE_D	RES	1
-
-;	MOVLW	b'00000110'
-;	MOVWF	STATE_A		;State A is "0011"
-;	MOVLW	b'00001010' 
-;	MOVWF	STATE_B		;0101	
-;	MOVLW	b'00010100' 
-;	MOVWF	STATE_C		;1100
-;	MOVLW	b'00011000' 
-;	MOVWF	STATE_D		;1010
