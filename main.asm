@@ -16,6 +16,10 @@ ORG 0X0000
 
 ORG	0X0004
 	GOTO	ISR
+ 
+;input voltage to servo, ADC, needs to fire at 11 volts
+;vert torque fires at 4.79 V or above
+;trim voltage, pin 7, 2.5 V
 
 ORG 0X0010
 	START	
